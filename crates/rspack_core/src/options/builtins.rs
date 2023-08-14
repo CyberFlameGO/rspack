@@ -8,7 +8,7 @@ use rspack_regex::RspackRegex;
 use swc_core::ecma::transforms::react::Runtime;
 use swc_plugin_import::PluginImportConfig;
 
-use crate::{try_any, AssetInfo};
+use crate::try_any;
 
 pub type Define = HashMap<String, String>;
 pub type Provide = HashMap<String, Vec<String>>;
@@ -188,10 +188,27 @@ pub struct Pattern {
   pub context: Option<PathBuf>,
   pub to_type: Option<ToType>,
   pub no_error_on_missing: bool,
-  pub info: Option<AssetInfo>,
+  pub info: Option<Info>,
   pub force: bool,
   pub priority: i32,
   pub glob_options: GlobOptions,
+}
+
+#[derive(Debug, Clone)]
+pub struct Info {
+  pub immutable: Option<bool>,
+  pub minimized: Option<bool>,
+  pub chunk_hash: Option<Vec<String>>,
+  pub content_hash: Option<Vec<String>>,
+  pub development: Option<bool>,
+  pub hot_module_replacement: Option<bool>,
+  pub related: Option<Related>,
+  pub version: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Related {
+  pub source_map: Option<String>,
 }
 
 #[derive(Debug, Clone)]

@@ -11,8 +11,8 @@ use dashmap::DashSet;
 use glob::MatchOptions;
 use regex::Regex;
 use rspack_core::{
-  rspack_sources::RawSource, AssetInfo, Compilation, CompilationAsset, CompilationLogger, Filename,
-  FromType, Logger, PathData, Pattern, Plugin, ToType,
+  rspack_sources::RawSource, AssetInfo, AssetInfoRelated, Compilation, CompilationAsset,
+  CompilationLogger, Filename, FromType, Info, Logger, PathData, Pattern, Plugin, ToType,
 };
 use rspack_error::Diagnostic;
 use rspack_hash::{HashDigest, HashFunction, HashSalt, RspackHash, RspackHashDigest};
@@ -24,7 +24,7 @@ pub struct RunPatternResult {
   pub absolute_filename: PathBuf,
   pub filename: String,
   pub source: RawSource,
-  pub info: Option<AssetInfo>,
+  pub info: Option<Info>,
   pub force: bool,
   pub priority: i32,
 }
@@ -208,7 +208,7 @@ impl CopyPlugin {
       absolute_filename,
       filename,
       source,
-      info: None,
+      info: pattern.info.clone(),
       force: pattern.force,
       priority: pattern.priority,
     })
@@ -498,13 +498,21 @@ impl Plugin for CopyPlugin {
           return;
         }
         exist_asset.set_source(Some(Arc::new(result.source)));
+        if let Some(info) = result.info {
+          set_info(&mut exist_asset.info, info);
+        }
         // TODO set info { copied: true, sourceFilename }
       } else {
+        let mut asset_info = Default::default();
+        if let Some(info) = result.info {
+          set_info(&mut asset_info, info);
+        }
+
         args.compilation.emit_asset(
           result.filename,
           CompilationAsset {
             source: Some(Arc::new(result.source)),
-            info: AssetInfo::default(),
+            info: asset_info,
           },
         )
       }
@@ -547,8 +555,64 @@ fn escape_glob_chars(s: &str) -> String {
   escaped
 }
 
+fn set_info(target: &mut AssetInfo, info: Info) {
+  if let Some(minimized) = info.minimized {
+    target.minimized = minimized;
+  }
+
+  if let Some(immutable) = info.immutable {
+    target.immutable = immutable;
+  }
+
+  if let Some(chunk_hash) = info.chunk_hash {
+    target.chunk_hash = rustc_hash::FxHashSet::from_iter(chunk_hash.into_iter());
+  }
+
+  if let Some(content_hash) = info.content_hash {
+    target.content_hash = rustc_hash::FxHashSet::from_iter(content_hash.into_iter());
+  }
+
+  if let Some(development) = info.development {
+    target.development = development;
+  }
+
+  if let Some(hot_module_replacement) = info.hot_module_replacement {
+    target.hot_module_replacement = hot_module_replacement;
+  }
+
+  if let Some(related) = info.related {
+    target.related = AssetInfoRelated {
+      source_map: related.source_map,
+    };
+  }
+
+  if let Some(version) = info.version {
+    target.version = version;
+  }
+}
+
 #[test]
 fn test_escape() {
   assert_eq!(escape_glob_chars("a/b/**/*.js"), r#"a/b/\*\*/\*.js"#);
   assert_eq!(escape_glob_chars("a/b/c"), r#"a/b/c"#);
+}
+
+// If this test fails, you should modify `set_info` function, according to your changes about AssetInfo
+// Make sure every field of AssetInfo is considered
+#[test]
+fn ensure_info_fields() {
+  let info = AssetInfo {
+    immutable: Default::default(),
+    minimized: Default::default(),
+    chunk_hash: Default::default(),
+    content_hash: Default::default(),
+    development: Default::default(),
+    hot_module_replacement: Default::default(),
+    related: AssetInfoRelated {
+      source_map: Default::default(),
+    },
+    version: Default::default(),
+  };
+
+  std::hint::black_box(info);
 }

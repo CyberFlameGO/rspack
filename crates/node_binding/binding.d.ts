@@ -679,6 +679,17 @@ export interface RawIncrementalRebuild {
   emitAsset: boolean
 }
 
+export interface RawInfo {
+  immutable?: boolean
+  minimized?: boolean
+  chunkHash?: Array<string>
+  contentHash?: Array<string>
+  development?: boolean
+  hotModuleReplacement?: boolean
+  related?: RawRelated
+  version?: string
+}
+
 export interface RawLibraryAuxiliaryComment {
   root?: string
   commonjs?: string
@@ -878,6 +889,7 @@ export interface RawPattern {
   force: boolean
   priority: number
   globOptions: RawGlobOptions
+  info?: RawInfo
 }
 
 export interface RawPluginImportConfig {
@@ -926,6 +938,10 @@ export interface RawReactOptions {
   useBuiltins?: boolean
   useSpread?: boolean
   refresh?: boolean
+}
+
+export interface RawRelated {
+  sourceMap?: string
 }
 
 export interface RawRelayConfig {
