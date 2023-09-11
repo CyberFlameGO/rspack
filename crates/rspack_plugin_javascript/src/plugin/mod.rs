@@ -1,9 +1,9 @@
 pub mod flag_usage_plugin;
 pub mod impl_plugin_for_js_plugin;
 pub mod infer_async_modules_plugin;
+pub mod inner_graph_plugin;
 pub mod provided_exports_plugin;
 pub mod side_effects_flag_plugin;
-
 use std::hash::Hash;
 
 use rspack_core::rspack_sources::{BoxSource, ConcatSource, RawSource, SourceExt};
