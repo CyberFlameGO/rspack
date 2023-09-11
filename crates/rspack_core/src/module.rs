@@ -10,12 +10,14 @@ use rspack_identifier::{Identifiable, Identifier};
 use rspack_sources::Source;
 use rspack_util::ext::{AsAny, DynEq, DynHash};
 use rustc_hash::FxHashSet as HashSet;
+use swc_core::ecma::atoms::JsWord;
 
 use crate::tree_shaking::visitor::OptimizeAnalyzeResult;
 use crate::{
   BoxDependency, ChunkUkey, CodeGenerationResult, Compilation, CompilerContext, CompilerOptions,
-  ConnectionState, Context, ContextModule, DependencyTemplate, ExternalModule, ModuleDependency,
-  ModuleGraph, ModuleType, NormalModule, RawModule, Resolve, SharedPluginDriver, SourceType,
+  ConnectionState, Context, ContextModule, DependencyId, DependencyTemplate, ExternalModule,
+  ModuleDependency, ModuleGraph, ModuleType, NormalModule, RawModule, Resolve, SharedPluginDriver,
+  SourceType,
 };
 
 pub struct BuildContext<'a> {
@@ -42,6 +44,8 @@ pub struct BuildInfo {
   pub missing_dependencies: HashSet<PathBuf>,
   pub build_dependencies: HashSet<PathBuf>,
   pub asset_filenames: HashSet<String>,
+  pub harmony_named_exports: HashSet<JsWord>,
+  pub all_star_exports: Vec<DependencyId>,
 }
 
 #[derive(Debug, Default, Clone, Hash)]
@@ -127,7 +131,7 @@ pub struct BuildResult {
 
 #[derive(Debug, Default, Clone)]
 pub struct FactoryMeta {
-  pub side_effects: Option<bool>,
+  pub side_effect_free: Option<bool>,
 }
 
 pub type ModuleIdentifier = Identifier;
